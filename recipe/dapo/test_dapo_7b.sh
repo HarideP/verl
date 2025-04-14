@@ -53,6 +53,10 @@ infer_micro_batch_size=null
 train_micro_batch_size=null
 offload=False
 
+# Custom reward function
+custom_reward_function_path="${WORKING_DIR}/ebitda_reward.py"
+custom_reward_function_name=compute_score
+
 ray job submit --no-wait --runtime-env="${RUNTIME_ENV}" \
     --working-dir "${WORKING_DIR}" \
     -- python3 -m recipe.dapo.src.main_dapo \
@@ -65,6 +69,7 @@ ray job submit --no-wait --runtime-env="${RUNTIME_ENV}" \
     data.gen_batch_size=${gen_prompt_bsz} \
     data.train_batch_size=${train_prompt_bsz} \
     data.truncation='left' \
+    data.reward_fn_key=ebitda_prediction \
     actor_rollout_ref.rollout.n=${n_resp_per_prompt} \
     actor_rollout_ref.actor.use_kl_loss=${use_kl_loss} \
     actor_rollout_ref.actor.kl_loss_coef=${kl_loss_coef} \
@@ -122,6 +127,8 @@ ray job submit --no-wait --runtime-env="${RUNTIME_ENV}" \
     reward_model.overlong_buffer.enable=${enable_overlong_buffer} \
     reward_model.overlong_buffer.len=${overlong_buffer_len} \
     reward_model.overlong_buffer.penalty_factor=${overlong_penalty_factor} \
+    custom_reward_function.path=${custom_reward_function_path} \
+    custom_reward_function.name=${custom_reward_function_name} \
     trainer.logger=['console','wandb'] \
     trainer.project_name="${project_name}" \
     trainer.experiment_name="${exp_name}" \
