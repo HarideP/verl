@@ -14,7 +14,7 @@ kl_loss_coef=0.0
 clip_ratio_low=0.2
 clip_ratio_high=0.28
 
-max_prompt_length=$((1024 * 2))
+max_prompt_length=$((1024 * 8)) # 修改以适应更长的输出
 max_response_length=$((1024 * 2))
 enable_overlong_buffer=True
 overlong_buffer_len=512
@@ -23,21 +23,22 @@ overlong_penalty_factor=1.0
 loss_agg_mode="token-mean"
 
 enable_filter_groups=True
-filter_groups_metric=acc
+filter_groups_metric=seq_reward
 max_num_gen_batches=10
-train_prompt_bsz=512
+
+train_prompt_bsz=128 # 修改以适应有限资源的机器
 gen_prompt_bsz=$((train_prompt_bsz * 3))
-train_prompt_mini_bsz=32
-n_resp_per_prompt=16
+train_prompt_mini_bsz=16
+n_resp_per_prompt=8
 
 # Ray
 RAY_ADDRESS=${RAY_ADDRESS:-"http://localhost:8265"}
 WORKING_DIR=${WORKING_DIR:-"${PWD}"}
 RUNTIME_ENV=${RUNTIME_ENV:-"${WORKING_DIR}/verl/trainer/runtime_env.yaml"}
-NNODES=${NNODES:-4}
+NNODES=${NNODES:-1}
 # Paths
 RAY_DATA_HOME=${RAY_DATA_HOME:-"${HOME}/verl"}
-MODEL_PATH=${MODEL_PATH:-"${RAY_DATA_HOME}/models/Qwen2.5-0.5B"}
+MODEL_PATH=${MODEL_PATH:-"/root/Qwen2.5-0.5B-Instruct"}
 CKPTS_DIR=${CKPTS_DIR:-"${RAY_DATA_HOME}/ckpts/${project_name}/${exp_name}"}
 TRAIN_FILE=${TRAIN_FILE:-"${RAY_DATA_HOME}/data/ebitda_prediction_grpo_dataset_v7_en_train.parquet"}
 TEST_FILE=${TEST_FILE:-"${RAY_DATA_HOME}/data/ebitda_prediction_grpo_dataset_v7_en_test.parquet"}
@@ -69,7 +70,6 @@ ray job submit --no-wait --runtime-env="${RUNTIME_ENV}" \
     data.gen_batch_size=${gen_prompt_bsz} \
     data.train_batch_size=${train_prompt_bsz} \
     data.truncation='left' \
-    data.reward_fn_key=ebitda_prediction \
     actor_rollout_ref.rollout.n=${n_resp_per_prompt} \
     actor_rollout_ref.actor.use_kl_loss=${use_kl_loss} \
     actor_rollout_ref.actor.kl_loss_coef=${kl_loss_coef} \
@@ -104,7 +104,6 @@ ray job submit --no-wait --runtime-env="${RUNTIME_ENV}" \
     actor_rollout_ref.actor.entropy_coeff=0 \
     actor_rollout_ref.actor.grad_clip=1.0 \
     actor_rollout_ref.actor.loss_agg_mode=${loss_agg_mode} \
-    actor_rollout_ref.actor.loss_agg_mode=True \
     actor_rollout_ref.actor.ulysses_sequence_parallel_size=1 \
     actor_rollout_ref.rollout.gpu_memory_utilization=0.85 \
     actor_rollout_ref.rollout.log_prob_micro_batch_size=${infer_micro_batch_size} \
@@ -132,7 +131,7 @@ ray job submit --no-wait --runtime-env="${RUNTIME_ENV}" \
     trainer.logger=['console','wandb'] \
     trainer.project_name="${project_name}" \
     trainer.experiment_name="${exp_name}" \
-    trainer.n_gpus_per_node=8 \
+    trainer.n_gpus_per_node=1 \
     trainer.nnodes="${NNODES}" \
     trainer.val_before_train=True \
     trainer.test_freq=2 \

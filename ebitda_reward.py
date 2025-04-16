@@ -55,8 +55,15 @@ def compute_score(data_source, solution_str, ground_truth, extra_info=None):
     返回:
         float: 奖励分数，范围[0,1]
     """
-    if data_source != "ebitda_prediction":
-        return 0.0
+    # if data_source != "ebitda_prediction":
+    #     return 0.0
+    # 保留最后 300 个字符。请确认这个长度适合你的任务！
+    # 如果预测值可能出现在更早的位置而被截断，需要调整或移除此行。
+    original_length = len(solution_str)
+    solution_str = solution_str[-300:]
+     # （可选）可以加日志记录被截断的情况
+    # if len(solution_str) < original_length:
+    #     print(f"Warning: Truncated solution_str from {original_length} to {len(solution_str)} chars.")
     
     try:
 
