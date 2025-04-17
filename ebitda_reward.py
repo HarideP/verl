@@ -42,6 +42,11 @@ def compute_format_score(response):
     # 如果格式不完全正确或预测值无效，返回0分
     return 0.0
 
+
+
+    # （Debug）可以加日志记录被截断的情况
+    # if len(solution_str) < original_length:
+    #     print(f"Warning: Truncated solution_str from {original_length} to {len(solution_str)} chars.")
 def compute_score(data_source, solution_str, ground_truth, extra_info=None):
     """
     计算EBITDA预测的奖励分数
@@ -55,18 +60,12 @@ def compute_score(data_source, solution_str, ground_truth, extra_info=None):
     返回:
         float: 奖励分数，范围[0,1]
     """
-    # if data_source != "ebitda_prediction":
-    #     return 0.0
-    # 保留最后 300 个字符。请确认这个长度适合你的任务！
-    # 如果预测值可能出现在更早的位置而被截断，需要调整或移除此行。
+
+    # 保留最后 300 个字符
     original_length = len(solution_str)
     solution_str = solution_str[-300:]
-     # （可选）可以加日志记录被截断的情况
-    # if len(solution_str) < original_length:
-    #     print(f"Warning: Truncated solution_str from {original_length} to {len(solution_str)} chars.")
-    
-    try:
 
+    try:
         # 提取预测值
         prediction = extract_ebitda_prediction(solution_str)
         if prediction is None:
@@ -74,10 +73,8 @@ def compute_score(data_source, solution_str, ground_truth, extra_info=None):
         
         # 计算格式分
         format_score = compute_format_score(solution_str)
-
         # 转换真实值为浮点数
         true_value = float(ground_truth)
-        
         # 计算相对误差
         relative_error = abs(prediction - true_value) / (abs(true_value) + 1e-6)
         
@@ -101,7 +98,7 @@ def compute_score(data_source, solution_str, ground_truth, extra_info=None):
     except (ValueError, TypeError):
         return 0.0  # 如果发生错误，返回0分
 
-# 为了支持多个奖励函数，我们可以添加其他评分函数
+# 更严格的评分标准(待探索)
 def compute_score_strict(data_source, solution_str, ground_truth, extra_info=None):
     """
     更严格的EBITDA预测评分函数
